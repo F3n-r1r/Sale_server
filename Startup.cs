@@ -10,6 +10,8 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
+using Server.Models;
+using Server.Services;
 
 namespace Server
 {
@@ -25,6 +27,10 @@ namespace Server
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
+            services.Configure<EmailSettings>(Configuration.GetSection(nameof(EmailSettings)));
+
+            services.AddSingleton<IEmailService, EmailService>();
+
             services.AddControllers();
         }
 
