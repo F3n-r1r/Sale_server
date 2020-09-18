@@ -1,4 +1,4 @@
-﻿using Server.Models;
+﻿using Server.Settings;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -39,7 +39,7 @@ namespace Server.Services
                 message.Subject = subject;
                 message.Body = new TextPart(TextFormat.Html)
                 {
-                    Text = $"<h1>{ body }</h1>"
+                    Text = $"{ body }"
                 };
 
                 using (var client = new SmtpClient())
