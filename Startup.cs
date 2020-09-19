@@ -11,6 +11,8 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 
+using AutoMapper;
+using Server.Helpers;
 using Server.Settings;
 using Server.Services;
 using Microsoft.Extensions.Options;
@@ -32,8 +34,11 @@ namespace Server
             services.Configure<DatabaseSettings>(Configuration.GetSection(nameof(DatabaseSettings)));
             services.AddSingleton<DatabaseSettings>(sp => sp.GetRequiredService<IOptions<DatabaseSettings>>().Value);
 
+            services.Configure<AuthSettings>(Configuration.GetSection(nameof(AuthSettings)));
             services.Configure<EmailSettings>(Configuration.GetSection(nameof(EmailSettings)));
 
+
+            services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
 
             services.AddSingleton<AccountService>();
             services.AddSingleton<IEmailService, EmailService>();
