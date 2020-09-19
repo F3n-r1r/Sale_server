@@ -13,6 +13,7 @@ using Microsoft.Extensions.Logging;
 
 using Server.Settings;
 using Server.Services;
+using Microsoft.Extensions.Options;
 
 namespace Server
 {
@@ -29,8 +30,12 @@ namespace Server
         public void ConfigureServices(IServiceCollection services)
         {
             services.Configure<DatabaseSettings>(Configuration.GetSection(nameof(DatabaseSettings)));
+            services.AddSingleton<DatabaseSettings>(sp => sp.GetRequiredService<IOptions<DatabaseSettings>>().Value);
+
             services.Configure<EmailSettings>(Configuration.GetSection(nameof(EmailSettings)));
 
+
+            services.AddSingleton<AccountService>();
             services.AddSingleton<IEmailService, EmailService>();
 
             services.AddControllers();

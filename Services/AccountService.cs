@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Security.Cryptography;
 using System.Threading.Tasks;
+using Microsoft.AspNetCore.Http;
 using MongoDB.Driver;
 using Server.Models;
 using Server.Settings;
@@ -22,6 +23,7 @@ namespace Server.Services
         }
 
 
+
         /// <summary>
         /// Method to check if an account exists
         /// </summary>
@@ -35,10 +37,35 @@ namespace Server.Services
         }
 
 
+
         /// <summary>
-        /// 
+        /// Method to create a new account and send verification email to that account using the email service
         /// </summary>
-        public async Task<Account> Create(Account account, string origin)
+        public async Task<bool> Verify(string Token)
+        {
+            Account account = await _accounts.Find(x => x.VerificationToken == Token).FirstOrDefaultAsync();
+            
+            if(account == null)
+            {
+                return false;
+            }
+
+            account.Verified = DateTime.Now;
+            account.VerificationToken = null;
+
+            var filter = Builders<Account>.Filter.Eq("Email", account.Email);
+            var update = Builders<Account>.Update.Set(x => x.Verified, DateTime.Now).Set(x => x.VerificationToken, null);
+            await _accounts.FindOneAndUpdateAsync(filter, update);
+
+            return true;
+        }
+
+
+
+        /// <summary>
+        /// Method to create a new account and send verification email to that account using the email service
+        /// </summary>
+        public async Task<Account> Create(Account account, HostString host)
         {
             account.Created = DateTime.Now;
             account.Role = Role.User;
@@ -52,7 +79,7 @@ namespace Server.Services
 
             await _accounts.InsertOneAsync(account);
 
-            string verifyUrl = $"{origin}/account/verify?token={account.VerificationToken}";
+            string verifyUrl = $"{host}/account/verify?token={account.VerificationToken}";
             string message = $@"
                                 <h1>Hello!</h1>
                                 <p>Please click the link below to verify your newly created account</p>

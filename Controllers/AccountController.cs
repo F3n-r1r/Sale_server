@@ -12,7 +12,7 @@ using Server.Services;
 namespace Server.Controllers
 {
 
-    [Route("api/v1/")]
+    [Route("api/v1/[controller]")]
     [Authorize]
     [ApiController]
     public class AccountController : ControllerBase
@@ -31,20 +31,36 @@ namespace Server.Controllers
         /// API endpoint which accepts a post request to register a new account
         /// </summary>
         [AllowAnonymous]
-        [HttpPost("account")]
-        [ProducesResponseType(StatusCodes.Status200OK)]
-        [ProducesResponseType(StatusCodes.Status409Conflict)]
-        public async Task<ActionResult<Account>> Create([FromBody] Account account)
+        [HttpPost]
+        public async Task<ActionResult<Account>> Create([FromForm] Account account)
         {
-            if(await _accountService.Exists(account) == true)
+            if (await _accountService.Exists(account) == true)
             {
-                var response = await _accountService.Create(account, Request.Headers["origin"]);
-                return StatusCode(200, response);
+                return StatusCode(409, new { message = $"'{account.Email}' already exists." });
             }
             
-            return StatusCode(409, $"'{account.Email}' already exists.");
+            var response = await _accountService.Create(account, Request.Host);
+            return Ok(new { message = response });  
         }
 
+
+
+
+        /// <summary>
+        /// API endpoint which accepts a post request to register a new account
+        /// </summary>
+        [AllowAnonymous]
+        [HttpPost("verify")]
+        public async Task<IActionResult> Verify(string Token)
+        {
+            var verify = await _accountService.Verify(Token);
+            if(verify)
+            {
+                return Ok(new { message = "Verification successful, you can now login" });
+            }
+
+            return StatusCode(401, new { message = $"'{Token}' could not be verified." });
+        }
     }
 
 }
