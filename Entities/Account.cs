@@ -19,12 +19,9 @@ namespace Server.Entities
         public string Title { get; set; }
         public string FirstName { get; set; }
         public string LastName { get; set; }
-        [DataType(DataType.EmailAddress)]
         public string Email { get; set; }
-        [DataType(DataType.Password)]
         public string Password { get; set; }
         public bool AcceptTerms { get; set; }
-        [EnumDataType(typeof(Role))]
         public Role Role { get; set; }
         public string VerificationToken { get; set; }
         public DateTime? Verified { get; set; }

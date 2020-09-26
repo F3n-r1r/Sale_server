@@ -7,7 +7,8 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Server.Models;
 using Server.Services;
-
+using Server.Entities;
+using Server.Models.Accounts;
 
 namespace Server.Controllers
 {
@@ -27,40 +28,101 @@ namespace Server.Controllers
 
 
 
+
+
+        /// <summary>
+        /// API endpoint which accepts a post request to authenticate account credentials
+        /// </summary>
+        [AllowAnonymous]
+        [HttpPost("authenticate")]
+        public async Task<ActionResult<AuthenticateResponse>> Authenticate([FromForm] AuthenticateRequest model)
+        {
+            var response = await _accountService.Authenticate(model, ipAddress());
+            setTokenCookie(response.RefreshToken);
+            return Ok(response);
+        }
+
+
+
+
+
         /// <summary>
         /// API endpoint which accepts a post request to register a new account
         /// </summary>
         [AllowAnonymous]
-        [HttpPost]
-        public async Task<ActionResult<Account>> Create([FromForm] Account account)
+        [HttpPost("register")]
+        public async Task<IActionResult> Register([FromForm] RegisterRequest model)
         {
-            if (await _accountService.Exists(account) == true)
+            if (await _accountService.Exists(model.Email) == true)
             {
-                return StatusCode(409, new { message = $"'{account.Email}' already exists." });
+                return StatusCode(409, new { message = $"'{model.Email}' already exists." });
             }
             
-            var response = await _accountService.Create(account, Request.Host);
-            return Ok(new { message = response });  
+            await _accountService.Register(model, Request.Headers["origin"]);
+            return Ok(new { message = "Registration successful, please check your email for verification instructions" });
         }
+
+
 
 
 
 
         /// <summary>
-        /// API endpoint which accepts a post request to register a new account
+        /// API endpoint which accepts a post request to provide the requester with a link to reset their password
         /// </summary>
         [AllowAnonymous]
-        [HttpPost("verify")]
-        public async Task<IActionResult> Verify(string Token)
+        [HttpPost("forgot-password")]
+        public async Task<IActionResult> ForgotPassword([FromForm] ForgotPasswordRequest model)
         {
-            var verify = await _accountService.Verify(Token);
-            if(verify)
-            {
-                return Ok(new { message = "Verification successful, you can now login" });
-            }
-
-            return StatusCode(401, new { message = $"'{Token}' could not be verified." });
+            await _accountService.ForgotPassword(model, Request.Headers["origin"]);
+            return Ok(new { message = "Please check your email for password reset instructions" });
         }
-    }
 
+
+
+
+
+        /// <summary>
+        /// API endpoint which accepts a post request to verify a new account
+        /// </summary>
+        [AllowAnonymous]
+        [HttpPost("verify-email")]
+        public async Task<IActionResult> VerifyEmail([FromQuery] VerifyEmailRequest model)
+        {
+            await _accountService.VerifyEmail(model.Token);
+            return Ok(new { message = "Verification successful, you can now login" });
+        }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+        private void setTokenCookie(string token)
+        {
+            var cookieOptions = new CookieOptions
+            {
+                HttpOnly = true,
+                Expires = DateTime.UtcNow.AddDays(7)
+            };
+            Response.Cookies.Append("refreshToken", token, cookieOptions);
+        }
+
+        private string ipAddress()
+        {
+            if (Request.Headers.ContainsKey("X-Forwarded-For"))
+                return Request.Headers["X-Forwarded-For"];
+            else
+                return HttpContext.Connection.RemoteIpAddress.MapToIPv4().ToString();
+        }
+
+    }
 }
