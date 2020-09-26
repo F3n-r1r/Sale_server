@@ -9,6 +9,7 @@ using Server.Models;
 using Server.Services;
 using Server.Entities;
 using Server.Models.Accounts;
+using System.Runtime.CompilerServices;
 
 namespace Server.Controllers
 {
@@ -76,6 +77,21 @@ namespace Server.Controllers
         {
             await _accountService.ForgotPassword(model, Request.Headers["origin"]);
             return Ok(new { message = "Please check your email for password reset instructions" });
+        }
+
+
+
+
+
+        /// <summary>
+        /// API endpoint which accepts a post request to reset the requesters password
+        /// </summary>
+        [AllowAnonymous]
+        [HttpPost("reset-password")]
+        public async Task<IActionResult> ResetPassword([FromQuery] ResetPasswordRequest model)
+        {
+            await _accountService.ResetPassword(model);
+            return Ok(new { message = "Password reset successful." });
         }
 
 

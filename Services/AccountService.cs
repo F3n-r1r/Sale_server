@@ -111,6 +111,30 @@ namespace Server.Services
 
 
         /// <summary>
+        /// Method to reset an account password
+        /// </summary>
+        public async Task ResetPassword(ResetPasswordRequest model)
+        {
+            var account = await _accounts.Find(x => x.ResetToken == model.Token && x.ResetTokenExpires > DateTime.Now).FirstOrDefaultAsync();
+            if (account == null)
+            {
+                throw new Exception();
+            }
+
+            var filter = Builders<Account>.Filter.Eq("ResetToken", account.ResetToken);
+            var update = Builders<Account>.Update
+                        .Set(x => x.Password, BC.HashPassword(model.Password))
+                        .Set(x => x.PasswordReset, DateTime.Now)
+                        .Set(x => x.ResetToken, null)
+                        .Set(x => x.ResetTokenExpires, null);
+            await _accounts.FindOneAndUpdateAsync(filter, update);
+        }
+
+
+
+
+
+        /// <summary>
         /// Method to create a new account and send verification email to that account using the email service
         /// </summary>
         public async Task Register(RegisterRequest model, string origin)
