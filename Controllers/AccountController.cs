@@ -16,7 +16,7 @@ using Server.Helpers;
 namespace Server.Controllers
 {
 
-    [Route("api/v1/[controller]")]
+    [Route("api/v1/accounts")]
     [ApiController]
     public class AccountController : BaseController
     {
@@ -57,7 +57,7 @@ namespace Server.Controllers
             {
                 return StatusCode(409, new { message = $"'{model.Email}' already exists." });
             }
-            
+
             await _accountService.Register(model, Request.Headers["origin"]);
             return Ok(new { message = "Registration successful, please check your email for verification instructions" });
         }
@@ -113,10 +113,9 @@ namespace Server.Controllers
         /// API endpoint to get a list of all accounts, only accessible by admins.
         /// </summary>
         [Authorize(Role.Admin)]
-        [HttpGet("accounts")]
+        [HttpGet]
         public async Task<ActionResult<IEnumerable<AccountResponse>>> GetAll()
         {
-
             var accounts = await _accountService.GetAll();
             return Ok(accounts);
         }
@@ -124,6 +123,22 @@ namespace Server.Controllers
 
 
 
+
+
+        /// <summary>
+        /// 
+        /// </summary>
+        [Authorize]
+        [HttpGet("{id}")]
+        public async Task<ActionResult<AccountResponse>> GetById(string id)
+        {
+            // users can get their own account and admins can get any account
+            if (id != Account.Id && Account.Role != Role.Admin)
+                return Unauthorized(new { message = $"Unauthorized" });
+
+            var account = await _accountService.GetById(id);
+            return Ok(account);
+        }
 
 
 

@@ -44,8 +44,8 @@ namespace Server
             services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
 
             // configure DI for application services
-            services.AddSingleton<AccountService>();
-            services.AddSingleton<IEmailService, EmailService>();
+            services.AddScoped<AccountService>();
+            services.AddScoped<IEmailService, EmailService>();
 
             services.AddControllers().AddJsonOptions(x => x.JsonSerializerOptions.IgnoreNullValues = true);
         }

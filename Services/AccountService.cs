@@ -204,6 +204,17 @@ namespace Server.Services
 
 
 
+        /// <summary>
+        /// Method to get a single account by id
+        /// </summary>
+        public async Task<AccountResponse> GetById(string id)
+        {
+            var account = await _accounts.Find(x => x.Id == id).FirstOrDefaultAsync();
+            return _mapper.Map<AccountResponse>(account);
+        }
+
+
+
 
 
 
