@@ -16,6 +16,7 @@ using Server.Helpers;
 using Server.Settings;
 using Server.Services;
 using Microsoft.Extensions.Options;
+using Server.Middleware;
 
 namespace Server
 {
@@ -31,19 +32,22 @@ namespace Server
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
+            // configure strongly typed settings object
             services.Configure<DatabaseSettings>(Configuration.GetSection(nameof(DatabaseSettings)));
-            services.AddSingleton<DatabaseSettings>(sp => sp.GetRequiredService<IOptions<DatabaseSettings>>().Value);
-
             services.Configure<AuthSettings>(Configuration.GetSection(nameof(AuthSettings)));
             services.Configure<EmailSettings>(Configuration.GetSection(nameof(EmailSettings)));
 
+            services.AddCors();
+
+            services.AddSingleton<DatabaseSettings>(sp => sp.GetRequiredService<IOptions<DatabaseSettings>>().Value);
 
             services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
 
+            // configure DI for application services
             services.AddSingleton<AccountService>();
             services.AddSingleton<IEmailService, EmailService>();
 
-            services.AddControllers();
+            services.AddControllers().AddJsonOptions(x => x.JsonSerializerOptions.IgnoreNullValues = true);
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -58,7 +62,16 @@ namespace Server
 
             app.UseRouting();
 
-            app.UseAuthorization();
+            // global cors policy
+            app.UseCors(x => x
+                .SetIsOriginAllowed(origin => true)
+                .AllowAnyMethod()
+                .AllowAnyHeader()
+                .AllowCredentials());
+
+
+            // custom jwt auth middleware
+            app.UseMiddleware<JwtMiddleware>();
 
             app.UseEndpoints(endpoints =>
             {

@@ -1,23 +1,24 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using Microsoft.AspNetCore.Authorization;
+﻿using AutoMapper;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using Server.Models;
-using Server.Services;
+using System;
+using System.Collections.Generic;
 using Server.Entities;
 using Server.Models.Accounts;
-using System.Runtime.CompilerServices;
+using Server.Services;
+
+
+using System.Threading.Tasks;
+
+
+using Server.Helpers;
 
 namespace Server.Controllers
 {
 
     [Route("api/v1/[controller]")]
-    [Authorize]
     [ApiController]
-    public class AccountController : ControllerBase
+    public class AccountController : BaseController
     {
 
         private readonly AccountService _accountService;
@@ -34,7 +35,6 @@ namespace Server.Controllers
         /// <summary>
         /// API endpoint which accepts a post request to authenticate account credentials
         /// </summary>
-        [AllowAnonymous]
         [HttpPost("authenticate")]
         public async Task<ActionResult<AuthenticateResponse>> Authenticate([FromForm] AuthenticateRequest model)
         {
@@ -50,7 +50,6 @@ namespace Server.Controllers
         /// <summary>
         /// API endpoint which accepts a post request to register a new account
         /// </summary>
-        [AllowAnonymous]
         [HttpPost("register")]
         public async Task<IActionResult> Register([FromForm] RegisterRequest model)
         {
@@ -71,7 +70,6 @@ namespace Server.Controllers
         /// <summary>
         /// API endpoint which accepts a post request to provide the requester with a link to reset their password
         /// </summary>
-        [AllowAnonymous]
         [HttpPost("forgot-password")]
         public async Task<IActionResult> ForgotPassword([FromForm] ForgotPasswordRequest model)
         {
@@ -86,7 +84,6 @@ namespace Server.Controllers
         /// <summary>
         /// API endpoint which accepts a post request to reset the requesters password
         /// </summary>
-        [AllowAnonymous]
         [HttpPost("reset-password")]
         public async Task<IActionResult> ResetPassword([FromQuery] ResetPasswordRequest model)
         {
@@ -101,7 +98,6 @@ namespace Server.Controllers
         /// <summary>
         /// API endpoint which accepts a post request to verify a new account
         /// </summary>
-        [AllowAnonymous]
         [HttpPost("verify-email")]
         public async Task<IActionResult> VerifyEmail([FromQuery] VerifyEmailRequest model)
         {
@@ -113,6 +109,17 @@ namespace Server.Controllers
 
 
 
+        /// <summary>
+        /// API endpoint to get a list of all accounts, only accessible by admins.
+        /// </summary>
+        [Authorize(Role.Admin)]
+        [HttpGet("accounts")]
+        public async Task<ActionResult<IEnumerable<AccountResponse>>> GetAll()
+        {
+
+            var accounts = await _accountService.GetAll();
+            return Ok(accounts);
+        }
 
 
 

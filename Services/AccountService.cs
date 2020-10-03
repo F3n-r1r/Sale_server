@@ -191,6 +191,22 @@ namespace Server.Services
 
 
 
+        /// <summary>
+        /// Method to authenticate an account
+        /// </summary>
+        public async Task<IEnumerable<AccountResponse>> GetAll()
+        {
+            var accounts = await _accounts.Find(x => true).ToListAsync();
+            return _mapper.Map<List<AccountResponse>>(accounts);
+        }
+
+
+
+
+
+
+
+
 
 
         private string randomTokenString()
