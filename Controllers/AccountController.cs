@@ -144,6 +144,25 @@ namespace Server.Controllers
 
 
 
+        /// <summary>
+        /// 
+        /// </summary>
+        [Authorize]
+        [HttpDelete("{id}")]
+        public IActionResult Delete(string id)
+        {
+            // users can delete their own account and admins can delete any account
+            if (id != Account.Id && Account.Role != Role.Admin)
+                return Unauthorized(new { message = "Unauthorized" });
+
+            _accountService.Delete(id);
+            return Ok(new { message = "Account deleted successfully" });
+        }
+
+
+
+
+
         private void setTokenCookie(string token)
         {
             var cookieOptions = new CookieOptions

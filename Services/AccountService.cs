@@ -216,6 +216,16 @@ namespace Server.Services
 
 
 
+        /// <summary>
+        /// Method to delete a single account by id
+        /// </summary>
+        public async void Delete(string id)
+        {
+            await _accounts.FindOneAndDeleteAsync(x => x.Id == id);
+        }
+
+
+
 
 
 
